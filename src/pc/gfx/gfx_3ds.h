@@ -5,6 +5,6 @@
 
 #define N3DS_USE_ANTIALIASING
 
-struct GfxWindowManagerAPI gfx_3ds;
+extern struct GfxWindowManagerAPI gfx_3ds;
 
 #endif
