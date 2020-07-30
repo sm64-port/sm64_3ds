@@ -496,12 +496,14 @@ static void gfx_citro3d_set_viewport(int x, int y, int width, int height) {
     C3D_SetViewport(x, y, width, height);
 }
 
-static void gfx_citro3d_set_scissor(int x, int y, int width, int height) {
-#ifdef N3DS_USE_ANTIALIASING
-    C3D_SetScissor(GPU_SCISSOR_NORMAL, y * 2, x * 2, (y + height) * 2, (x + width) * 2);
-#else
-    C3D_SetScissor(GPU_SCISSOR_NORMAL, y, x, y + height, x + width);
-#endif
+static void gfx_citro3d_set_scissor(int x, int y, int width, int height)
+{
+    if (gGfx3DSMode == GFX_3DS_MODE_NORMAL)
+        C3D_SetScissor(GPU_SCISSOR_NORMAL, y, x, y + height, x + width);
+    else if (gGfx3DSMode == GFX_3DS_MODE_AA_22 || gGfx3DSMode == GFX_3DS_MODE_WIDE_AA_12)
+        C3D_SetScissor(GPU_SCISSOR_NORMAL, y * 2, x * 2, (y + height) * 2, (x + width) * 2);
+    else if (gGfx3DSMode == GFX_3DS_MODE_WIDE)
+        C3D_SetScissor(GPU_SCISSOR_NORMAL, y, x * 2, y + height, (x + width) * 2);
 }
 
 static void applyBlend()

@@ -4,23 +4,40 @@
 #include <citro3d.h>
 #include "gfx_3ds.h"
 
-#ifdef N3DS_USE_ANTIALIASING
+// #define DISPLAY_TRANSFER_FLAGS_NORMAL \
+// 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
+// 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
+// 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NONE))
 
-#define DISPLAY_TRANSFER_FLAGS \
-	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
-	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
-	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_XY))
+// #define DISPLAY_TRANSFER_FLAGS_AA_12 \
+// 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
+// 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
+// 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_X))
 
-#else
+// #define DISPLAY_TRANSFER_FLAGS_AA_22 \
+// 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
+// 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
+// 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_XY))
 
-#define DISPLAY_TRANSFER_FLAGS \
-	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
-	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
-	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NONE))
+// #ifdef N3DS_USE_ANTIALIASING
 
-#endif
+// #define DISPLAY_TRANSFER_FLAGS \
+// 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
+// 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
+// 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_XY))
+
+// #else
+
+// #define DISPLAY_TRANSFER_FLAGS \
+// 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
+// 	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
+// 	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NONE))
+
+// #endif
 
 static C3D_RenderTarget* sTarget;
+
+Gfx3DSMode gGfx3DSMode;
 
 static bool checkN3DS()
 {
@@ -40,12 +57,49 @@ static void gfx_3ds_init(void)
     gfxInitDefault();
     consoleInit(GFX_BOTTOM, NULL);
     C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
+
+    bool useAA = false;
 #ifdef N3DS_USE_ANTIALIASING
-    sTarget = C3D_RenderTargetCreate(240*2, 400*2, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-#else
-    sTarget = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+    useAA = true;
 #endif
-	C3D_RenderTargetSetOutput(sTarget, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+    bool useWide = false;
+#ifdef N3DS_USE_WIDE_800PX
+    u8 model;
+    CFGU_GetSystemModel(&model);
+    useWide = model != 3; //wide is not possible on o2ds
+#endif
+
+    u32 transferFlags = 
+        GX_TRANSFER_FLIP_VERT(0) | 
+        GX_TRANSFER_OUT_TILED(0) | 
+        GX_TRANSFER_RAW_COPY(0) |
+	    GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | 
+        GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8);
+
+    if (useAA && !useWide)
+        transferFlags |= GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_XY);
+    else if (useAA && useWide)
+        transferFlags |= GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_X);
+    else
+        transferFlags |= GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO);
+
+    int width = useAA || useWide ? 800 : 400;
+    int height = useAA ? 480 : 240;
+
+    sTarget = C3D_RenderTargetCreate(height, width, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	C3D_RenderTargetSetOutput(sTarget, GFX_TOP, GFX_LEFT, transferFlags);
+
+    if (!useAA && !useWide)
+        gGfx3DSMode = GFX_3DS_MODE_NORMAL;
+    else if (useAA && !useWide)
+        gGfx3DSMode = GFX_3DS_MODE_AA_22;
+    else if (!useAA && useWide)
+        gGfx3DSMode = GFX_3DS_MODE_WIDE;
+    else
+        gGfx3DSMode = GFX_3DS_MODE_WIDE_AA_12;
+
+    if (useWide)
+        gfxSetWide(true);
 }
 
 static void gfx_3ds_main_loop(void (*run_one_game_iter)(void)) 
