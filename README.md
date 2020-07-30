@@ -1,49 +1,17 @@
-# Super Mario 64
+# Super Mario 64 3DS Port
 
-This repo contains a full decompilation of Super Mario 64 (J), (U), and (E).
-The source and data have been decompiled but complete naming and documentation
-all of the code and data is still a work in progress. Decompiling the Shindou ROM
-is also an ongoing effort.
+This repo contains a full decompilation of Super Mario 64 (J), (U), and (E), ported to the 3DS.
 
-It builds the following ROMs:
-
-* sm64.jp.z64 `sha1: 8a20a5c83d6ceb0f0506cfc9fa20d8f438cafe51`
-* sm64.us.z64 `sha1: 9bef1128717f958171a4afac3ed78ee2bb4e86ce`
-* sm64.eu.z64 `sha1: 4ac5721683d0e0b6bbb561b58a71740845dceea9`
-
-This repo does not include all assets necessary for compiling the ROMs.
+This repo does not include all assets necessary for compiling the port.
 A prior copy of the game is required to extract the required assets.
 
 ## Installation
 
-### Docker
-
-#### 1. Copy baserom(s) for asset extraction
-
-For each version (jp/us/eu) that you want to build a ROM for, put an existing ROM at
-`./baserom.<version>.z64` for asset extraction.
-
-#### 2. Create docker image
-
-```bash
-docker build -t sm64 .
-```
-
-#### 3. Build
-
-To build we simply have to mount our local filesystem into the docker container and build.
-
-```bash
-# for example if you have baserom.us.z64 in the project root
-docker run --rm --mount type=bind,source="$(pwd)",destination=/sm64 sm64 make VERSION=us -j4
-
-# if your host system is linux you need to tell docker what user should own the output files
-docker run --rm --mount type=bind,source="$(pwd)",destination=/sm64 --user $UID:$UID sm64 make VERSION=us -j4
-```
-
-Resulting artifacts can be found in the `build` directory.
-
 ### Linux
+
+#### 0. Cloning repo
+
+Run `git clone https://github.com/sm64-port/sm64_3ds.git`.
 
 #### 1. Copy baserom(s) for asset extraction
 
@@ -53,39 +21,31 @@ For each version (jp/us/eu) that you want to build a ROM for, put an existing RO
 #### 2. Install build dependencies
 
 The build system has the following package requirements:
- * binutils-mips >= 2.27
- * python3 >= 3.6
- * libaudiofile
- * qemu-irix
+```
+python3 >= 3.6
+libaudiofile
+devkitPro
+├──devkitARM
+├──devkitarm-crtls
+├──devkitarm-rules
+├──3dstools
+├──citro3d
+├──libctru
+└──picasso
+```
 
 __Debian / Ubuntu__
 ```
-sudo apt install build-essential pkg-config git binutils-mips-linux-gnu python3 zlib1g-dev libaudiofile-dev
+sudo apt install build-essential pkg-config git python3 zlib1g-dev libaudiofile-dev
 ```
-
-Download latest package from [qemu-irix Releases](https://github.com/n64decomp/qemu-irix/releases)
-```
-sudo dpkg -i qemu-irix-2.11.0-2169-g32ab296eef_amd64.deb
-```
-
-(Optional) Clone https://github.com/n64decomp/qemu-irix and follow the install instructions in the README.
 
 __Arch Linux__
 ```
 sudo pacman -S base-devel python audiofile
 ```
-Install the following AUR packages:
-* [mips64-elf-binutils](https://aur.archlinux.org/packages/mips64-elf-binutils) (AUR)
-* [qemu-irix-git](https://aur.archlinux.org/packages/qemu-irix-git) (AUR)
 
-__Binutils and Other Linux Distributions__
-
-Most modern Linux distributions should have equivalent packages to the other two listed above. You may have to use a different version of
-GNU binutils. Listed below are fully compatible binutils distributions with support in the makefile, and examples of distros that offer them:
-
-* `mips64-elf-` (Arch AUR)
-* `mips-linux-gnu-` (Ubuntu and other Debian-based distros)
-* `mips64-linux-gnu-` (RHEL/CentOS/Fedora)
+Now follow https://devkitpro.org/wiki/devkitPro_pacman to install devkitPro. 
+Run `sudo (dkp-)pacman -S 3ds-dev` after completing the `Updating Databases` section.
 
 #### 3. Build ROM
 
@@ -94,31 +54,17 @@ is not too long or else this process will error, as the emulated IDO compiler ca
 handle paths longer than 255 characters.
 Examples:
 ```
+make -j4                  # build (U) version with 4 jobs
 make VERSION=jp -j4       # build (J) version instead with 4 jobs
-make VERSION=eu COMPARE=0 # build (EU) version but do not compare ROM hashes
 ```
-
-The full list of configurable variables are listed below, with the default being the first listed:
-
-* ``VERSION``: ``us``, ``jp``, ``eu``, ``sh`` (WIP)
-* ``GRUCODE``: ``f3d_old``, ``f3d_new``, ``f3dex``, ``f3dex2``, ``f3dzex``
-* ``COMPARE``: ``1`` (compare ROM hash), ``0`` (do not compare ROM hash)
-* ``NON_MATCHING``: Use functionally equivalent C implementations for non-matchings. Also will avoid instances of undefined behavior.
-* ``CROSS``: Cross-compiler tool prefix (Example: ``mips64-elf-``).
-* ``QEMU_IRIX``: Path to a ``qemu-irix`` binary.
 
 ## Windows
 
-For Windows, install WSL and a distro of your choice following
-[Windows Subsystem for Linux Installation Guide for Windows 10](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
-We recommend either Debian or Ubuntu 18.04 Linux distributions under WSL.
+For Windows, install devkitPro by following
+[devkitPro Installation Guide for Windows](https://devkitpro.org/wiki/Getting_Started#Windows).
 
-Then follow the directions in the [Linux](#linux) installation section above.
+Then follow the directions in the [Linux](#linux) installation section above, using MSYS to execute commands.
 
-## macOS
-
-macOS is currently unsupported as qemu-irix is unable to be built for macOS host.
-The recommended path is installing a Linux distribution under a VM.
 
 ## Project Structure
 
@@ -126,10 +72,10 @@ The recommended path is installing a Linux distribution under a VM.
 sm64
 ├── actors: object behaviors, geo layout, and display lists
 ├── asm: handwritten assembly code, rom header
-│   └── non_matchings: asm for non-matching sections
+│   └── non_matchings: asm for non-matching sections
 ├── assets: animation and demo data
-│   ├── anims: animation data
-│   └── demos: demo data
+│   ├── anims: animation data
+│   └── demos: demo data
 ├── bin: asm files for ordering display lists and textures
 ├── build: output directory
 ├── data: behavior scripts, misc. data
@@ -140,12 +86,12 @@ sm64
 ├── lib: SDK library code
 ├── sound: sequences, sound samples, and sound banks
 ├── src: C source code for game
-│   ├── audio: audio code
-│   ├── buffers: stacks, heaps, and task buffers
-│   ├── engine: script processing engines and utils
-│   ├── game: behaviors and rest of game source
-│   ├── goddard: Mario intro screen
-│   └── menu: title screen and file, act, and debug level selection menus
+│   ├── audio: audio code
+│   ├── buffers: stacks, heaps, and task buffers
+│   ├── engine: script processing engines and utils
+│   ├── game: behaviors and rest of game source
+│   ├── goddard: Mario intro screen
+│   └── menu: title screen and file, act, and debug level selection menus
 ├── text: dialog, level names, act names
 ├── textures: skybox and generic texture data
 └── tools: build tools
@@ -157,5 +103,3 @@ Pull requests are welcome. For major changes, please open an issue first to
 discuss what you would like to change.
 
 Run clang-format on your code to ensure it meets the project's coding standards.
-
-Official Discord: https://discord.gg/27JtCWs
