@@ -93,7 +93,7 @@ make -j4                  # build (U) version with 4 jobs
 make VERSION=jp -j4       # build (J) version instead with 4 jobs
 ```
 
-## Windows
+### Windows
 
 For Windows, install WSL and a distro of your choice following
 [Windows Subsystem for Linux Installation Guide for Windows 10](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
