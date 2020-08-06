@@ -48,9 +48,9 @@ static void controller_3ds_read(OSContPad *pad) {
     if (kDown & KEY_START)
         pad->button |= START_BUTTON;
     if (kDown & KEY_R)
-        pad->button |= Z_TRIG;
-    if (kDown & KEY_L)
         pad->button |= R_TRIG;
+    if (kDown & KEY_L)
+        pad->button |= Z_TRIG;
     if (kDown & KEY_A)
         pad->button |= A_BUTTON;
     if (kDown & KEY_B)
