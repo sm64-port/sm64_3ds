@@ -493,7 +493,12 @@ static void gfx_citro3d_set_zmode_decal(bool zmode_decal) {
 }
 
 static void gfx_citro3d_set_viewport(int x, int y, int width, int height) {
-    C3D_SetViewport(x, y, width, height);
+    if (gGfx3DSMode == GFX_3DS_MODE_NORMAL)
+        C3D_SetViewport(y, x, height, width);
+    else if (gGfx3DSMode == GFX_3DS_MODE_AA_22 || gGfx3DSMode == GFX_3DS_MODE_WIDE_AA_12)
+        C3D_SetViewport(y * 2, x * 2, height * 2, width * 2);
+    else if (gGfx3DSMode == GFX_3DS_MODE_WIDE)
+        C3D_SetViewport(y, x * 2, height, width * 2);
 }
 
 static void gfx_citro3d_set_scissor(int x, int y, int width, int height)
