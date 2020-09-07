@@ -27,5 +27,5 @@ ENV DEVKITPRO=/opt/devkitpro
 ENV DEVKITARM=/opt/devkitpro/devkitARM
 ENV DEVKITPPC=/opt/devkitpro/devkitPPC
 
-CMD echo 'usage: docker run --rm --mount type=bind,source="$(pwd)",destination=/sm64 sm64 make VERSION=${VERSION:-us} -j4\n' \
+CMD echo 'usage: docker run --rm --mount type=bind,source="$(pwd)",destination=/sm64 --tmpfs /tmp sm64 make VERSION=${VERSION:-us} -j4\n' \
          'see https://github.com/n64decomp/sm64/blob/master/README.md for advanced usage'

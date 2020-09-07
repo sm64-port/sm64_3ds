@@ -26,10 +26,10 @@ To build we simply have to mount our local filesystem into the docker container 
 
 ```bash
 # for example if you have baserom.us.z64 in the project root
-sudo docker run --rm --mount type=bind,source="$(pwd)",destination=/sm64 sm64 make VERSION=${VERSION:-us} -j4
+sudo docker run --rm --mount type=bind,source="$(pwd)",destination=/sm64 --tmpfs /tmp sm64 make VERSION=${VERSION:-us} -j4
 
 # if your host system is linux you need to tell docker what user should own the output files
-sudo docker run --rm --mount type=bind,source="$(pwd)",destination=/sm64 --user $UID:$UID sm64 make VERSION=${VERSION:-us} -j4
+sudo docker run --rm --mount type=bind,source="$(pwd)",destination=/sm64 --user $UID:$UID --tmpfs /tmp sm64 make VERSION=${VERSION:-us} -j4
 ```
 
 Resulting artifacts can be found in the `build` directory.
@@ -71,7 +71,7 @@ __Arch Linux__
 sudo pacman -S base-devel python audiofile
 ```
 
-Now follow https://devkitpro.org/wiki/devkitPro_pacman to install devkitPro. 
+Now follow https://devkitpro.org/wiki/devkitPro_pacman to install devkitPro.
 Run `sudo (dkp-)pacman -S 3ds-dev` after completing the `Updating Databases` section.
 
 Set the environment variables:
@@ -84,8 +84,8 @@ PATH=$PATH:/opt/devkitpro/tools/bin/
 
 #### 3. Build ROM
 
-Run `make` to build the ROM (defaults to `VERSION=us`). Make sure your path to the repo 
-is not too long or else this process will error, as the emulated IDO compiler cannot 
+Run `make` to build the ROM (defaults to `VERSION=us`). Make sure your path to the repo
+is not too long or else this process will error, as the emulated IDO compiler cannot
 handle paths longer than 255 characters.
 Examples:
 ```
