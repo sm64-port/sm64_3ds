@@ -102,7 +102,7 @@ ifeq ($(VERSION),sh)
   GRUCODE_ASFLAGS := --defsym F3D_NEW=1
   TARGET := sm64.sh
 # TODO: GET RID OF THIS!!! We should mandate assets for Shindou like EU but we dont have the addresses extracted yet so we'll just pretend you have everything extracted for now.
-  NOEXTRACT := 1 
+  NOEXTRACT := 1
 else
   $(error unknown version "$(VERSION)")
 endif
@@ -228,7 +228,7 @@ ifeq ($(TARGET_N64),1)
   ASM_DIRS := asm $(ASM_DIRS)
 else
   SRC_DIRS := $(SRC_DIRS) src/pc src/pc/gfx src/pc/audio src/pc/controller
-  ASM_DIRS :=
+  ASM_DIRS := asm3ds
 endif
 BIN_DIRS := bin bin/$(VERSION)
 
@@ -469,7 +469,8 @@ ifeq ($(TARGET_N3DS),1)
   CTRULIB		:=	$(DEVKITPRO)/libctru
   LIBDIRS	:= $(CTRULIB)
   export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
-  PLATFORM_CFLAGS  := -mtp=soft -DTARGET_N3DS -DARM11 -DosGetTime=n64_osGetTime -D_3DS -march=armv6k -mtune=mpcore -mfloat-abi=hard -mword-relocations -fomit-frame-pointer -ffast-math $(foreach dir,$(LIBDIRS),-I$(dir)/include) 
+  VERSION_ASFLAGS += -g -march=armv6k -mfloat-abi=hard -mfpu=neon
+  PLATFORM_CFLAGS  := -Wa,-mfpu=neon -mtp=soft -DTARGET_N3DS -DARM11 -DosGetTime=n64_osGetTime -D_3DS -march=armv6k -mtune=mpcore -mfloat-abi=hard -mword-relocations -fomit-frame-pointer -ffast-math $(foreach dir,$(LIBDIRS),-I$(dir)/include)
   PLATFORM_LDFLAGS := $(LIBPATHS) -lcitro3d -lctru -lm -specs=3dsx.specs -g -marm -mthumb-interwork -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft # -Wl,-Map,$(notdir $*.map)
 endif
 
